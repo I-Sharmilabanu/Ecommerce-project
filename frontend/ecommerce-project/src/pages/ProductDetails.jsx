@@ -4,7 +4,7 @@ import Navbar from "../components/Navbar";
 import { getProductById } from "../services/ProductService";
 import { useAuth } from "../context/AuthContext";
 import { auth } from "../config/firebase";
-import bgvideo from "../assets/video/0_Shopping_Cart_Add_To_Cart_3840x2160.mp4";
+
 
 
 

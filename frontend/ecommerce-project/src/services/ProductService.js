@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // Backend base URL
-const API_URL = "http://localhost:5000/api/products";
+const API_URL = "https://ecommerce-project-6q5r.onrender.com";
 
 // Get all products
 export const getAllProducts = async () => {

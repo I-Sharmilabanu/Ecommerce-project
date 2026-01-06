@@ -4,9 +4,7 @@ const Product = require("../models/Product");
 const upload = require("../config/multer");
 const cloudinary = require("../config/cloudinary");
 
-/* ===============================
-   CREATE PRODUCT (CLOUDINARY)
-================================ */
+/* CREATE PRODUCT */
 router.post("/", upload.single("image"), async (req, res) => {
   try {
     const { title, price, description } = req.body;
@@ -15,20 +13,16 @@ router.post("/", upload.single("image"), async (req, res) => {
       return res.status(400).json({ message: "Image required" });
     }
 
-    // 🔥 UPLOAD TO CLOUDINARY
     const result = await cloudinary.uploader.upload(req.file.path);
-console.log(result.secure_url);
 
-    // ✅ SAVE CLOUDINARY URL
     const product = new Product({
       title,
       price,
       description,
-      image: result.secure_url, // ⭐ THIS IS THE LINK
+      image: result.secure_url,
     });
 
     await product.save();
-
     res.status(201).json(product);
   } catch (error) {
     console.error("Create product error:", error);
@@ -36,29 +30,25 @@ console.log(result.secure_url);
   }
 });
 
-/* ===============================
-   GET ALL PRODUCTS
-================================ */
+/* GET ALL PRODUCTS */
 router.get("/", async (req, res) => {
   try {
     const products = await Product.find();
-    res.status(200).json(products);
+    res.json(products);
   } catch (error) {
+    console.error("Fetch products error:", error);
     res.status(500).json({ message: "Failed to fetch products" });
   }
 });
 
-/* ===============================
-   GET SINGLE PRODUCT
-================================ */
+/* GET SINGLE PRODUCT */
 router.get("/:id", async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
-
     if (!product)
       return res.status(404).json({ message: "Product not found" });
 
-    res.status(200).json(product);
+    res.json(product);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch product" });
   }

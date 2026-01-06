@@ -35,7 +35,7 @@ const Product = () => {
       <Navbar />
 
       {/* 🔍 SEARCH */}
-      <div className="sticky w-3/4 top-28 mx-auto z-50">
+      <div className="sticky w-3/4 top-28 left-0 z-50 ">
         <input
           type="text"
           placeholder="Search products..."

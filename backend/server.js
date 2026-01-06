@@ -5,7 +5,7 @@ const cors = require("cors");
 const path = require("path");
 const Razorpay = require("razorpay");
 
-const productRoutes = require("./routes/ProductRoutes");
+const productRoutes = require("./routes/ProductRoutes"); // ✅ MUST MATCH FILE NAME
 const verifyUser = require("./verifyUser");
 
 const app = express();
@@ -13,12 +13,13 @@ const app = express();
 /* ---------- MIDDLEWARE ---------- */
 app.use(
   cors({
-    origin: ["https://ecommerce-project-fqjx.vercel.app",
-      "http://localhost:5173"], // later you can restrict
+    origin: [
+      "https://ecommerce-project-fqjx.vercel.app",
+      "http://localhost:5173",
+    ],
     methods: ["GET", "POST", "PUT", "DELETE"],
   })
 );
-
 
 app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
@@ -29,52 +30,39 @@ mongoose
   .then(() => console.log("MongoDB Connected ✅"))
   .catch((err) => console.error("Mongo error:", err));
 
-/* ---------- RAZORPAY (TEST MODE ONLY) ---------- */
+/* ---------- RAZORPAY ---------- */
 const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID, // rzp_test_
+  key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
 /* ---------- ROUTES ---------- */
-
-// Public
 app.get("/", (req, res) => {
   res.send("Backend is running 🚀");
 });
 
-// Products (public)
 app.use("/api/products", productRoutes);
 
-// Auth test (protected)
 app.get("/api/test-auth", verifyUser, (req, res) => {
   res.json({
     success: true,
-    message: "Authorized user",
-    user: {
-      uid: req.user.uid,
-      email: req.user.email,
-    },
+    user: req.user,
   });
 });
 
-// Create Razorpay Order (protected)
 app.post("/api/payment/create-order", verifyUser, async (req, res) => {
   try {
     const { amount } = req.body;
 
-    if (!amount || amount <= 0) {
-      return res.status(400).json({ message: "Invalid amount" });
-    }
-
     const order = await razorpay.orders.create({
-      amount: Number(amount) * 100, // INR → paise
+      amount: Number(amount) * 100,
       currency: "INR",
       receipt: `order_${Date.now()}`,
     });
 
-    res.status(200).json(order);
+    res.json(order);
   } catch (error) {
-    console.error("Razorpay error:", error);
+    console.error(error);
     res.status(500).json({ message: "Payment order failed" });
   }
 });

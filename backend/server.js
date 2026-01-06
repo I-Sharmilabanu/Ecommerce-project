@@ -13,7 +13,7 @@ const app = express();
 /* ---------- MIDDLEWARE ---------- */
 app.use(
   cors({
-    origin: ["https://ecommerce-project-jzyv.vercel.app",
+    origin: ["https://ecommerce-project-fqjx-bpaio6y80-sharmilabanus-projects.vercel.app",
       "http://localhost:5173"], // later you can restrict
     methods: ["GET", "POST", "PUT", "DELETE"],
   })

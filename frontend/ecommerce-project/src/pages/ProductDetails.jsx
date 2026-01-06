@@ -4,9 +4,7 @@ import Navbar from "../components/Navbar";
 import { getProductById } from "../services/ProductService";
 import { useAuth } from "../context/AuthContext";
 import { auth } from "../config/firebase";
-
-
-
+import API_BASE_URL from "../config/api";
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -68,49 +66,63 @@ const ProductDetails = () => {
     navigate("/addtocart");
   };
 
-  /* ---------- BUY NOW (RAZORPAY TEST MODE) ---------- */
+  /* ---------- BUY NOW ---------- */
   const handleBuyNow = async () => {
-    // 🔐 Check login
     if (!user) {
       alert("Please login to continue");
       navigate("/login");
       return;
     }
 
+    if (!selectedColor || !selectedSize) {
+      alert("Please select color and size");
+      return;
+    }
+
     try {
-      // 🔑 Firebase token
       const token = await auth.currentUser.getIdToken();
 
-      // 💳 Create order (backend)
       const res = await fetch(
-        "http://localhost:5000/api/payment/create-order",
+        `${API_BASE_URL}/api/payment/create-order`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ amount: product.price }),
+          body: JSON.stringify({
+            amount: product.price * 100, // 💰 paise
+          }),
         }
       );
 
       const order = await res.json();
 
-      // 🧾 Razorpay popup
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID, // ✅ YOUR TEST KEY ONLY
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: order.amount,
         currency: order.currency,
         order_id: order.id,
-         name: "Ecommerce",
-        description: "Dummy Payment (Test Mode)",
-        handler: function (response) {
-          alert("Payment Successful (TEST MODE)");
-          console.log("Payment response:", response);
+        name: "Ecommerce",
+        description: "Test Payment",
 
-          // Optional redirect
+        prefill: {
+          name: user.displayName || "Customer",
+          email: user.email,
+        },
+
+        method: {
+          card: true,
+          upi: true,
+          netbanking: true,
+          wallet: true,
+        },
+
+        handler: function () {
+          alert("Payment Successful");
           navigate("/dashboard");
         },
+
         theme: {
           color: "#e11d48",
         },
@@ -124,24 +136,24 @@ const ProductDetails = () => {
   };
 
   return (
-    
-    <div className="w-full overflow-x-hidden ">
+    <div className="w-full overflow-x-hidden">
       <Navbar />
-      <div className="relative h-96 w-full ">
-             <video
-                    className="absolute top-0 left-0 w-full h-96 object-cover mt-32"
-                    src="https://res.cloudinary.com/da22f8zk9/video/upload/v1767622261/0_Shopping_Cart_Add_To_Cart_3840x2160_bjkdzh.mp4"
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                  />
-                  <h1 className="absolute right-3/4 top-40 font-extrabold bg-black text-rose-500 text-2xl p-3 animate-bounce rounded-full">buy now</h1></div>
-       
+
+      {/* HERO VIDEO */}
+      <div className="relative h-96 w-full">
+        <video
+          className="absolute top-0 left-0 w-full h-96 object-cover mt-12"
+          src="https://res.cloudinary.com/da22f8zk9/video/upload/v1767622261/0_Shopping_Cart_Add_To_Cart_3840x2160_bjkdzh.mp4"
+          autoPlay
+          loop
+          muted
+          playsInline
+        />
+      </div>
 
       <div className="pt-28 px-6 md:px-24">
         <div className="flex flex-col md:flex-row gap-8">
-          {/* LEFT IMAGE SECTION */}
+          {/* LEFT IMAGE */}
           <div className="flex flex-col gap-4">
             <img
               src={mainImage}
@@ -227,7 +239,7 @@ const ProductDetails = () => {
 
               <button
                 onClick={handleBuyNow}
-                className="py-2 px-6 border bg-black text-white rounded hover:bg-rose-500 transition"
+                className="py-2 px-6 bg-black text-white rounded hover:bg-rose-500 transition"
               >
                 Buy Now
               </button>
@@ -235,10 +247,7 @@ const ProductDetails = () => {
           </div>
         </div>
       </div>
-    
     </div>
-      
-    
   );
 };
 

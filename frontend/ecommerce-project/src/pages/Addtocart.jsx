@@ -4,19 +4,20 @@ import Footer from "../components/Footer";
 import { useAuth } from "../context/AuthContext";
 import { auth } from "../config/firebase";
 import { useNavigate } from "react-router-dom";
+import API_BASE_URL from "../config/api";
 
 const AddToCart = () => {
   const [cartItems, setCartItems] = useState([]);
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Load cart from localStorage
+  /* ---------- LOAD CART ---------- */
   useEffect(() => {
     const cart = JSON.parse(localStorage.getItem("cart")) || [];
     setCartItems(cart);
   }, []);
 
-  // Increase quantity
+  /* ---------- QUANTITY ---------- */
   const increaseQty = (index) => {
     const updatedCart = [...cartItems];
     updatedCart[index].quantity += 1;
@@ -24,7 +25,6 @@ const AddToCart = () => {
     localStorage.setItem("cart", JSON.stringify(updatedCart));
   };
 
-  // Decrease quantity
   const decreaseQty = (index) => {
     const updatedCart = [...cartItems];
     if (updatedCart[index].quantity > 1) {
@@ -34,22 +34,25 @@ const AddToCart = () => {
     localStorage.setItem("cart", JSON.stringify(updatedCart));
   };
 
-  // Remove item
   const removeItem = (index) => {
     const updatedCart = cartItems.filter((_, i) => i !== index);
     setCartItems(updatedCart);
     localStorage.setItem("cart", JSON.stringify(updatedCart));
   };
 
-  // Total price
+  /* ---------- TOTAL ---------- */
   const totalPrice = cartItems.reduce(
     (total, item) => total + item.price * item.quantity,
     0
   );
 
-  /* ---------- CHECKOUT / BUY NOW ---------- */
+  const totalItems = cartItems.reduce(
+    (sum, item) => sum + item.quantity,
+    0
+  );
+
+  /* ---------- CHECKOUT ---------- */
   const handleCheckout = async () => {
-    // 1️⃣ Check login
     if (!user) {
       alert("Please login to proceed to checkout");
       navigate("/login");
@@ -57,40 +60,53 @@ const AddToCart = () => {
     }
 
     try {
-      // 2️⃣ Get Firebase token
       const token = await auth.currentUser.getIdToken();
 
-      // 3️⃣ Call backend to create Razorpay order
-      const res = await fetch("http://localhost:5000/api/payment/create-order", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ amount: totalPrice }),
-      });
+      const res = await fetch(
+        `${API_BASE_URL}/api/payment/create-order`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            amount: totalPrice * 100, // 💰 paise
+          }),
+        }
+      );
 
       const order = await res.json();
 
-      // 4️⃣ Open Razorpay TEST MODE
       const options = {
-        key:import.meta.env.VITE_RAZORPAY_KEY_ID, // 🔴 Replace with YOUR TEST key
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: order.amount,
         currency: order.currency,
         order_id: order.id,
         name: "Ecommerce",
-        description: "Dummy Payment (Test Mode)",
-        handler: function (response) {
-          alert("Payment successful ");
-          
+        description: "Cart Checkout",
 
-          // Clear cart
+        prefill: {
+          name: user.displayName || "Customer",
+          email: user.email,
+        },
+
+        method: {
+          card: true,
+          upi: true,
+          netbanking: true,
+          wallet: true,
+        },
+
+        handler: function () {
+          alert("Payment Successful");
+
           localStorage.removeItem("cart");
           setCartItems([]);
 
-          // Optional redirect
           navigate("/dashboard");
         },
+
         theme: {
           color: "#e11d48",
         },
@@ -114,7 +130,7 @@ const AddToCart = () => {
           <p className="text-gray-600">Your cart is empty</p>
         ) : (
           <>
-            {/* Cart Items */}
+            {/* CART ITEMS */}
             <div className="flex flex-col gap-6">
               {cartItems.map((item, index) => (
                 <div
@@ -136,7 +152,7 @@ const AddToCart = () => {
                     </div>
                   </div>
 
-                  {/* Quantity */}
+                  {/* QUANTITY */}
                   <div className="flex items-center gap-3 mt-4 md:mt-0">
                     <button
                       onClick={() => decreaseQty(index)}
@@ -153,9 +169,11 @@ const AddToCart = () => {
                     </button>
                   </div>
 
-                  {/* Price & Remove */}
+                  {/* PRICE */}
                   <div className="flex items-center gap-6 mt-4 md:mt-0">
-                    <p className="font-semibold">₹{item.price * item.quantity}</p>
+                    <p className="font-semibold">
+                      ₹{item.price * item.quantity}
+                    </p>
                     <button
                       onClick={() => removeItem(index)}
                       className="text-red-500 hover:underline"
@@ -167,14 +185,16 @@ const AddToCart = () => {
               ))}
             </div>
 
-            {/* Cart Summary */}
+            {/* SUMMARY */}
             <div className="mt-8 flex justify-end">
               <div className="bg-white p-6 rounded shadow w-full md:w-96">
                 <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
+
                 <div className="flex justify-between mb-2">
                   <span>Total Items</span>
-                  <span>{cartItems.length}</span>
+                  <span>{totalItems}</span>
                 </div>
+
                 <div className="flex justify-between font-bold text-lg">
                   <span>Total</span>
                   <span>₹{totalPrice}</span>
@@ -191,8 +211,8 @@ const AddToCart = () => {
           </>
         )}
       </div>
-      
-      <Footer/>
+
+      <Footer />
     </div>
   );
 };

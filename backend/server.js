@@ -13,7 +13,8 @@ const app = express();
 /* ---------- MIDDLEWARE ---------- */
 app.use(
   cors({
-    origin: "*", // later you can restrict
+    origin: ["https://ecommerce-project-jzyv.vercel.app",
+      "http://localhost:5173"], // later you can restrict
     methods: ["GET", "POST", "PUT", "DELETE"],
   })
 );

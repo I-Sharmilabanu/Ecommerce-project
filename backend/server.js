@@ -7,7 +7,6 @@ const Razorpay = require("razorpay");
 
 const productRoutes = require("./routes/ProductRoutes"); // ✅ MUST MATCH FILE NAME
 const verifyUser = require("./verifyUser");
-
 const app = express();
 
 /* ---------- MIDDLEWARE ---------- */
@@ -71,4 +70,5 @@ app.post("/api/payment/create-order", verifyUser, async (req, res) => {
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT} ✅`);
+  
 });

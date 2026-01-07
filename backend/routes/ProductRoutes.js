@@ -1,17 +1,14 @@
 const express = require("express");
 const router = express.Router();
 const Product = require("../models/Product");
-const upload = require("../config/multer");
+const upload = require("../config/multer"); // multer config
 const cloudinary = require("../config/cloudinary");
 
 /* CREATE PRODUCT */
 router.post("/", upload.single("image"), async (req, res) => {
   try {
     const { title, price, description } = req.body;
-
-    if (!req.file) {
-      return res.status(400).json({ message: "Image required" });
-    }
+    if (!req.file) return res.status(400).json({ message: "Image required" });
 
     const result = await cloudinary.uploader.upload(req.file.path);
 
@@ -34,9 +31,8 @@ router.post("/", upload.single("image"), async (req, res) => {
 router.get("/", async (req, res) => {
   try {
     const products = await Product.find();
-    res.json(products);
+    res.status(200).json(products);
   } catch (error) {
-    console.error("Fetch products error:", error);
     res.status(500).json({ message: "Failed to fetch products" });
   }
 });
@@ -45,10 +41,8 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
-    if (!product)
-      return res.status(404).json({ message: "Product not found" });
-
-    res.json(product);
+    if (!product) return res.status(404).json({ message: "Product not found" });
+    res.status(200).json(product);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch product" });
   }

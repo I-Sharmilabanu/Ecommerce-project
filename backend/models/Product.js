@@ -19,13 +19,13 @@ const productSchema = new mongoose.Schema(
     },
 
     image: {
-      type: String, // ✅ Cloudinary URL
+      type: String, // Cloudinary URL
       required: true,
     },
 
     additionalImages: [
       {
-        type: String, // ✅ Cloudinary URLs
+        type: String,
       },
     ],
 
@@ -51,6 +51,15 @@ const productSchema = new mongoose.Schema(
 
     clothDetails: {
       type: String,
+    },
+
+    // ✅ NEW FIELDS
+    Rating: {
+      type: String, // example: ★★★★☆
+    },
+
+    Discount: {
+      type: String, // example: 25%
     },
   },
   { timestamps: true }

@@ -27,7 +27,7 @@ function Navbar() {
         {/* LOGO */}
         <Link to="/">
           <h1 className="font-bold text-3xl tracking-widest text-rose-500">
-            F A S H A
+           🛍FASHION
           </h1>
         </Link>
 

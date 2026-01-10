@@ -12,7 +12,7 @@ function Footer() {
     
         {/* BRAND */}
         <div>
-          <h2 className="text-2xl font-bold tracking-widest mb-4">F A S H A</h2>
+          <h2 className="text-2xl font-bold tracking-widest mb-4">FASHION</h2>
           <p className="text-gray-400 text-sm">
             Your one-stop destination for trendy fashion, quality products,
             and unbeatable prices.
@@ -56,7 +56,7 @@ function Footer() {
     
       {/* BOTTOM FOOTER */}
       <div className="border-t border-gray-700 py-4 text-center text-gray-400 text-sm">
-        © 2026 FASHA. All rights reserved.
+        © 2026 FASHION. All rights reserved.
       </div>
     
     </footer>

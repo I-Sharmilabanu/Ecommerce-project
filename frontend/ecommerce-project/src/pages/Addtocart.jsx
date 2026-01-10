@@ -8,6 +8,7 @@ import API_BASE_URL from "../config/api";
 
 const AddToCart = () => {
   const [cartItems, setCartItems] = useState([]);
+  const [showPlaceOrder, setShowPlaceOrder] = useState(false); // For showing place order
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -46,35 +47,33 @@ const AddToCart = () => {
     0
   );
 
-  const totalItems = cartItems.reduce(
-    (sum, item) => sum + item.quantity,
-    0
-  );
+  const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
-  /* ---------- CHECKOUT ---------- */
-  const handleCheckout = async () => {
+  /* ---------- CHECKOUT BUTTON ---------- */
+  const handleCheckoutClick = () => {
     if (!user) {
       alert("Please login to proceed to checkout");
       navigate("/login");
       return;
     }
+    setShowPlaceOrder(true); // Show the place order section
+  };
 
+  /* ---------- BUY NOW / RAZORPAY ---------- */
+  const handleBuyNow = async () => {
     try {
       const token = await auth.currentUser.getIdToken();
 
-      const res = await fetch(
-        `${API_BASE_URL}/api/payment/create-order`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            amount: totalPrice * 100, // 💰 paise
-          }),
-        }
-      );
+      const res = await fetch(`${API_BASE_URL}/api/payment/create-order`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          amount: totalPrice * 100,
+        }),
+      });
 
       const order = await res.json();
 
@@ -85,28 +84,17 @@ const AddToCart = () => {
         order_id: order.id,
         name: "Ecommerce",
         description: "Cart Checkout",
-
         prefill: {
           name: user.displayName || "Customer",
           email: user.email,
         },
-
-        method: {
-          card: true,
-          upi: true,
-          netbanking: true,
-          wallet: true,
-        },
-
         handler: function () {
           alert("Payment Successful");
-
           localStorage.removeItem("cart");
           setCartItems([]);
-
+          setShowPlaceOrder(false);
           navigate("/dashboard");
         },
-
         theme: {
           color: "#e11d48",
         },
@@ -114,7 +102,7 @@ const AddToCart = () => {
 
       new window.Razorpay(options).open();
     } catch (error) {
-      console.error("Checkout error:", error);
+      console.error("Payment error:", error);
       alert("Payment failed");
     }
   };
@@ -169,7 +157,7 @@ const AddToCart = () => {
                     </button>
                   </div>
 
-                  {/* PRICE */}
+                  {/* PRICE + REMOVE */}
                   <div className="flex items-center gap-6 mt-4 md:mt-0">
                     <p className="font-semibold">
                       ₹{item.price * item.quantity}
@@ -185,7 +173,7 @@ const AddToCart = () => {
               ))}
             </div>
 
-            {/* SUMMARY */}
+            {/* ORDER SUMMARY */}
             <div className="mt-8 flex justify-end">
               <div className="bg-white p-6 rounded shadow w-full md:w-96">
                 <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
@@ -200,12 +188,30 @@ const AddToCart = () => {
                   <span>₹{totalPrice}</span>
                 </div>
 
-                <button
-                  onClick={handleCheckout}
-                  className="mt-6 w-full bg-black text-white py-2 rounded hover:bg-rose-500 transition"
-                >
-                  Checkout
-                </button>
+                {/* ---------- CHECKOUT / PLACE ORDER ---------- */}
+                <div className="mt-6">
+                  {!showPlaceOrder ? (
+                    <button
+                      onClick={handleCheckoutClick}
+                      className="w-full bg-black text-white py-2 rounded hover:bg-rose-500 transition"
+                    >
+                      Checkout
+                    </button>
+                  ) : (
+                    <div className="flex flex-col gap-3">
+                      <p className="text-gray-700">
+                        Confirm your order of {totalItems} item
+                        {totalItems > 1 ? "s" : ""} totaling ₹{totalPrice}
+                      </p>
+                      <button
+                        onClick={handleBuyNow}
+                        className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition"
+                      >
+                        Buy Now
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </>
